@@ -1,111 +1,50 @@
 # SearXNG Configuration for AI Stack
-# Optimized for JSON output and Open WebUI integration
+use_default_settings: true
 
 general:
   debug: false
   instance_name: "AI Stack Search"
-  contact_url: false
-  enable_metrics: true
 
 search:
   safe_search: 0
   autocomplete: "google"
   default_lang: "en"
-  max_page: 10
   formats:
     - html
     - json
-    - csv
-    - rss
 
 server:
   port: 8080
   bind_address: "0.0.0.0"
-  secret_key: "ultrasecretkey"  # Will be overridden by env
+  secret_key: "e47b840e104a7198a1bde68031d4708b06585964ccd986479adfb321deda3d60"
   base_url: false
   image_proxy: true
-  http_protocol_version: "1.1"
-  method: "POST"
 
 ui:
-  static_use_hash: true
-  default_theme: "simple"
-  default_locale: "en"
-  query_in_title: true
-  infinite_scroll: true
-  center_alignment: false
-  cache_url: https://web.archive.org/web/
+  default_theme: simple
+  default_locale: en
 
 outgoing:
   request_timeout: 3.0
   max_request_timeout: 10.0
-  useragent_suffix: ""
-  pool_connections: 100
-  pool_maxsize: 20
 
 engines:
   - name: google
     engine: google
     shortcut: g
-    disabled: false
     
   - name: duckduckgo
     engine: duckduckgo
     shortcut: ddg
-    disabled: false
-    
-  - name: bing
-    engine: bing
-    shortcut: bi
-    disabled: false
     
   - name: wikipedia
     engine: wikipedia
     shortcut: wp
-    disabled: false
     
   - name: github
     engine: github
     shortcut: gh
-    disabled: false
     
   - name: stackoverflow
     engine: stackoverflow
     shortcut: so
-    disabled: false
-    
-  - name: arxiv
-    engine: arxiv
-    shortcut: arx
-    disabled: false
-    
-  - name: youtube
-    engine: youtube_noapi
-    shortcut: yt
-    disabled: false
-    
-  - name: reddit
-    engine: reddit
-    shortcut: re
-    disabled: false
-
-categories:
-  general:
-    - google
-    - duckduckgo
-    - bing
-    - wikipedia
-  it:
-    - github
-    - stackoverflow
-  science:
-    - arxiv
-    - wikipedia
-  social:
-    - reddit
-    - youtube
-
-doi:
-  default: "sci-hub.se"
-
-default_doi_resolver: "sci-hub.se"
