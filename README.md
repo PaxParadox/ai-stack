@@ -1,12 +1,12 @@
 # Ultimate AI Stack
 
-A comprehensive, locally-hosted AI infrastructure with multi-GPU support, RAG capabilities, and workflow automation.
+A comprehensive, locally-hosted AI infrastructure with multi-GPU support and workflow automation.
 
 ## 🚀 Features
 
 - **Multi-GPU Support**: RTX 3090 (24GB) + GTX 1050 Ti (4GB)
-- **Complete AI Pipeline**: LLMs, embeddings (via Ollama), vector search, and RAG
-- **Web Interfaces**: Open WebUI for chat, n8n for automation, MinIO console
+- **Complete AI Pipeline**: LLMs, embeddings (via Ollama), and RAG capabilities
+- **Web Interfaces**: Open WebUI for chat, n8n for automation
 - **Privacy-First**: SearXNG search, all data locally hosted
 - **Tailscale Ready**: Secure remote access configured
 
@@ -14,12 +14,10 @@ A comprehensive, locally-hosted AI infrastructure with multi-GPU support, RAG ca
 
 | Service | Port | Purpose | GPU | URL |
 |---------|------|---------|-----|-----|
-| Open WebUI | 3000 | AI Chat Interface | - | http://ai-stack:3000 |
+| Open WebUI | 3000 | AI Chat Interface with built-in RAG | - | http://ai-stack:3000 |
 | Ollama | 11434 | LLM Inference & Embeddings | RTX 3090 | http://ai-stack:11434 |
 | n8n | 5678 | Workflow Automation | - | http://ai-stack:5678 |
 | SearXNG | 8888 | Private Search | - | http://ai-stack:8888 |
-| Milvus | 19530 | Vector Database | - | http://ai-stack:19530 |
-| MinIO | 9001 | Object Storage UI | - | http://ai-stack:9001 |
 | PostgreSQL | 5432 | Database | - | Internal |
 | Redis | 6379 | Cache | - | Internal |
 
@@ -47,6 +45,13 @@ docker compose logs -f [service-name]
 2. Create an account (if first time)
 3. Select a model and start chatting
 4. Web search is integrated - just ask questions!
+
+### RAG (Document Search)
+Open WebUI includes built-in RAG capabilities:
+1. Upload documents directly in the UI
+2. Automatic chunking and embedding using Ollama
+3. ChromaDB handles vector storage internally
+4. No additional configuration needed
 
 ### Available AI Models
 ```bash
@@ -90,7 +95,6 @@ Edit `.env` file to customize:
 - Database passwords
 - Service ports
 - Model selections
-- MinIO credentials (default: minioadmin/minioadmin123)
 
 ## 📊 Resource Usage
 
@@ -119,8 +123,17 @@ docker system prune -a
 - **Ollama API**: `http://ai-stack:11434/api/generate`
 - **Ollama Chat**: `http://ai-stack:11434/api/chat`
 - **Ollama Embeddings**: `http://ai-stack:11434/api/embeddings`
-- **Milvus API**: `http://ai-stack:19530`
 - **n8n Webhooks**: `http://ai-stack:5678/webhook/*`
+
+## 🚀 Optional Add-ons
+
+See `NEXT_STEPS.md` for additional services you can add:
+- ComfyUI for image generation
+- Whisper for speech-to-text
+- Monitoring with Grafana
+- And more!
+
+For advanced vector database needs, see `MILVUS_FUTURE_USE.md`
 
 ## 🤝 Contributing
 
@@ -162,5 +175,4 @@ Already fixed - N8N_SECURE_COOKIE=false is set
 - [Open WebUI Documentation](https://docs.openwebui.com)
 - [Ollama Documentation](https://github.com/ollama/ollama)
 - [n8n Documentation](https://docs.n8n.io)
-- [Milvus Documentation](https://milvus.io/docs)
 - [SearXNG Documentation](https://docs.searxng.org)

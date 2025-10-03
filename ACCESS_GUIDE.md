@@ -8,17 +8,15 @@ All services are accessible via Tailscale at IP: **100.119.32.64** or hostname: 
 
 | Service | URL | Credentials | Purpose |
 |---------|-----|-------------|---------|
-| **Open WebUI** | http://100.119.32.64:3000 | Create on first login | AI Chat Interface |
+| **Open WebUI** | http://100.119.32.64:3000 | Create on first login | AI Chat Interface with RAG |
 | **n8n** | http://100.119.32.64:5678 | Create on first login | Workflow Automation |
 | **SearXNG** | http://100.119.32.64:8888 | No login required | Private Search Engine |
-| **MinIO Console** | http://100.119.32.64:9001 | minioadmin / minioadmin123 | Object Storage |
 
 ### API Endpoints
 
 | Service | Endpoint | Example |
 |---------|----------|---------|
 | **Ollama** | http://100.119.32.64:11434 | `/api/generate`, `/api/chat`, `/api/embeddings` |
-| **Milvus** | http://100.119.32.64:19530 | Vector database operations |
 | **n8n Webhooks** | http://100.119.32.64:5678/webhook/* | Custom automation endpoints |
 
 ## Currently Installed Models
@@ -33,6 +31,7 @@ All services are accessible via Tailscale at IP: **100.119.32.64** or hostname: 
 2. Click "Sign Up" to create your admin account
 3. Once logged in, models from Ollama will be automatically available
 4. Test search by typing a query and using the search feature
+5. For RAG: Upload documents directly in the UI
 
 ### 2. n8n
 1. Navigate to http://100.119.32.64:5678
@@ -64,6 +63,15 @@ Run the health check script:
 cd /root/ai-stack
 ./check_services.sh
 ```
+
+## Using RAG (Document Search)
+
+Open WebUI has built-in RAG capabilities using ChromaDB:
+
+1. **Upload Documents**: Click the + button in Open WebUI
+2. **Automatic Processing**: Documents are chunked and embedded automatically
+3. **Search**: Your documents are searchable in conversations
+4. **No Setup**: Works out of the box!
 
 ## Using Embeddings
 
@@ -102,7 +110,6 @@ docker compose up -d <service-name>
 
 1. **Change default passwords** in production:
    - Edit `.env` file
-   - Update MinIO credentials
    - Set strong PostgreSQL password
 
 2. **Tailscale Security**:
@@ -151,3 +158,9 @@ docker compose stop
 # Start all services
 docker compose start
 ```
+
+## Next Steps
+
+See `NEXT_STEPS.md` for additional services you can add to enhance your AI stack.
+
+For advanced vector database needs, see `MILVUS_FUTURE_USE.md`.
