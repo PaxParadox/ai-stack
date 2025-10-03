@@ -1,7 +1,7 @@
 version: '3.8'
 
 # ComfyUI & Stable Diffusion - Image Generation Stack
-# Uses GTX 1050 Ti (GPU 1) for image generation
+# Uses RTX 3090 (GPU 0) - plenty of VRAM for both Ollama and image generation
 # Access ComfyUI at: http://ai-stack:7860
 # Access SD-WebUI at: http://ai-stack:7861
 
@@ -18,7 +18,7 @@ services:
       - ./comfyui/models:/workspace/models  # Share models
       - ./comfyui/custom_nodes:/workspace/custom_nodes
     environment:
-      - NVIDIA_VISIBLE_DEVICES=1  # GTX 1050 Ti
+      - NVIDIA_VISIBLE_DEVICES=0  # RTX 3090 - Plenty of VRAM!
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - COMFYUI_FLAGS=--listen 0.0.0.0
     deploy:
@@ -26,7 +26,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['0']
               capabilities: [gpu]
     networks:
       - ai-network
@@ -42,17 +42,16 @@ services:
       - sd_webui_data:/workspace
       - ./comfyui/models:/workspace/models  # Share models with ComfyUI
     environment:
-      - NVIDIA_VISIBLE_DEVICES=1  # GTX 1050 Ti
+      - NVIDIA_VISIBLE_DEVICES=0  # RTX 3090 - Much faster and more VRAM!
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - COMMANDLINE_ARGS=--listen --xformers --medvram --no-half-vae --api --opt-sdp-attention
+      - COMMANDLINE_ARGS=--listen --xformers --api
       - WEBUI_LAUNCH_LIVE_OUTPUT=true
-      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['0']
               capabilities: [gpu]
     networks:
       - ai-network

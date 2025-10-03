@@ -17,8 +17,8 @@ A comprehensive, locally-hosted AI infrastructure with multi-GPU support and wor
 |---------|------|---------|-----|-----|
 | Open WebUI | 3000 | AI Chat Interface with built-in RAG | - | http://ai-stack:3000 |
 | Ollama | 11434 | LLM Inference & Embeddings | RTX 3090 | http://ai-stack:11434 |
-| **ComfyUI** | **7860** | **Advanced Image Generation (Node-based)** | **GTX 1050 Ti** | **http://ai-stack:7860** |
-| **SD-WebUI** | **7861** | **Stable Diffusion (User-friendly)** | **GTX 1050 Ti** | **http://ai-stack:7861** |
+| **ComfyUI** | **7860** | **Advanced Image Generation (Node-based)** | **RTX 3090** | **http://ai-stack:7860** |
+| **SD-WebUI** | **7861** | **Stable Diffusion (User-friendly)** | **RTX 3090** | **http://ai-stack:7861** |
 | n8n | 5678 | Workflow Automation | - | http://ai-stack:5678 |
 | SearXNG | 8888 | Private Search | - | http://ai-stack:8888 |
 | PostgreSQL | 5432 | Database | - | Internal |
@@ -120,8 +120,8 @@ Edit `.env` file to customize:
 
 ## 📊 Resource Usage
 
-- **RTX 3090 (24GB)**: Primary LLM inference and embeddings (Ollama)
-- **GTX 1050 Ti (4GB)**: Image generation (ComfyUI/SD-WebUI)
+- **RTX 3090 (24GB)**: LLM inference + embeddings (Ollama) + Image generation (SD/ComfyUI)
+- **GTX 1050 Ti (4GB)**: Available for future use
 - **RAM**: Recommended 32GB+ (current: 5GB available)
 - **Storage**: 100GB+ for models and data (current: 499GB free)
 
