@@ -48,14 +48,14 @@ services:
     environment:
       - OLLAMA_KEEP_ALIVE=24h
       - OLLAMA_HOST=0.0.0.0
-      - NVIDIA_VISIBLE_DEVICES=0  # RTX 3090
+      - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['0']  # RTX 3090
+              count: all
               capabilities: [gpu]
     networks:
       - ai-network
@@ -80,6 +80,11 @@ services:
       - CHOWN
       - SETGID
       - SETUID
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Open WebUI - Main AI Interface
   open-webui:
@@ -101,12 +106,6 @@ services:
       - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>&format=json
       - DATABASE_URL=postgresql://${POSTGRES_USER:-aistack}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-aistack}
       - REDIS_URL=redis://redis:6379
-      - ENABLE_RAG_WEB_SEARCH=true
-      - RAG_EMBEDDING_ENGINE=tei
-      - RAG_EMBEDDING_MODEL=tei
-      - RAG_EMBEDDING_MODEL_URL=http://tei:80
-      - VECTOR_DB=milvus
-      - MILVUS_URL=http://milvus-standalone:19530
     depends_on:
       - postgres
       - redis
@@ -149,6 +148,13 @@ services:
       - redis
     networks:
       - ai-network
+
+networks:
+  ai-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
 
   # Milvus - Vector Database for RAG
   milvus-etcd:
@@ -225,18 +231,20 @@ services:
       - tei_data:/data
     environment:
       - MODEL_ID=${TEI_MODEL_ID:-BAAI/bge-base-en-v1.5}
+      - REVISION=refs/pr/5
       - POOLING=mean
       - MAX_BATCH_TOKENS=16384
-    command: --model-id BAAI/bge-base-en-v1.5
+    command: --model-id ${TEI_MODEL_ID:-BAAI/bge-base-en-v1.5}
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['1']  # GTX 1050 Ti for embeddings
+              device_ids: ['1']  # Use GTX 1050 Ti for embeddings
               capabilities: [gpu]
     networks:
       - ai-network
+
 
 volumes:
   postgres_data:
@@ -248,10 +256,3 @@ volumes:
   minio_data:
   milvus_data:
   tei_data:
-
-networks:
-  ai-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.0.0/16

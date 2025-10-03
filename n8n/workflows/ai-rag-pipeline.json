@@ -1,0 +1,79 @@
+{
+  "name": "AI RAG Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://tei:80/embed",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "inputs",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        }
+      },
+      "name": "Generate Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://milvus-standalone:19530/v1/vector/insert",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "collection_name",
+              "value": "documents"
+            },
+            {
+              "name": "data",
+              "value": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "name": "Store in Milvus",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llama3.2:3b"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.query }}"
+            },
+            {
+              "name": "context",
+              "value": "={{ $json.retrieved_docs }}"
+            }
+          ]
+        }
+      },
+      "name": "Generate Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Generate Embeddings": {
+      "main": [[{"node": "Store in Milvus", "type": "main", "index": 0}]]
+    },
+    "Store in Milvus": {
+      "main": [[{"node": "Generate Response", "type": "main", "index": 0}]]
+    }
+  }
+}
