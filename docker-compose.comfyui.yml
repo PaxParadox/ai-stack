@@ -12,7 +12,7 @@ services:
     container_name: comfyui
     restart: unless-stopped
     ports:
-      - "${COMFYUI_PORT:-7860}:18188"  # Direct access to ComfyUI (bypass auth portal)
+      - "${COMFYUI_PORT:-7860}:8188"  # ComfyUI default port
     volumes:
       - comfyui_data:/workspace
       - ./comfyui/models:/workspace/models  # Share models
@@ -21,9 +21,8 @@ services:
       - NVIDIA_VISIBLE_DEVICES=0  # RTX 3090 - Plenty of VRAM!
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - COMFYUI_FLAGS=--listen 0.0.0.0
-      - WEB_ENABLE_AUTH=false  # Disable authentication portal
-      - DIRECT_ADDRESS=100.119.32.64:7860  # Set proper access URL
-      - DIRECT_ADDRESS_GET_WAN=false
+      - CF_QUICK_TUNNELS=false
+      - WEB_ENABLE_AUTH=false
     deploy:
       resources:
         reservations:
