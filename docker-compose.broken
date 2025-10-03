@@ -48,16 +48,13 @@ services:
     environment:
       - OLLAMA_KEEP_ALIVE=24h
       - OLLAMA_HOST=0.0.0.0
-      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_VISIBLE_DEVICES=0  # RTX 3090
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    networks:
       - ai-network
 
   # SearXNG - Privacy-focused search engine
@@ -102,9 +99,11 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-aistack}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-aistack}
       - REDIS_URL=redis://redis:6379
       - ENABLE_RAG_WEB_SEARCH=true
-      - RAG_EMBEDDING_ENGINE=ollama
-      - RAG_EMBEDDING_MODEL=nomic-embed-text
-      - VECTOR_DB=chroma
+      - RAG_EMBEDDING_ENGINE=tei
+      - RAG_EMBEDDING_MODEL=tei
+      - RAG_EMBEDDING_MODEL_URL=http://tei:80
+      - VECTOR_DB=milvus
+      - MILVUS_URL=http://milvus-standalone:19530
     depends_on:
       - postgres
       - redis
@@ -148,7 +147,7 @@ services:
     networks:
       - ai-network
 
-  # Milvus dependencies
+  # Milvus - Vector Database for RAG
   milvus-etcd:
     image: quay.io/coreos/etcd:v3.5.12
     container_name: milvus-etcd
@@ -174,11 +173,11 @@ services:
     container_name: milvus-minio
     restart: unless-stopped
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
     ports:
       - "${MINIO_PORT:-9001}:9001"
-      - "${MINIO_CONSOLE_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9002}:9000"
     volumes:
       - minio_data:/minio_data
     command: minio server /minio_data --console-address ":9001"
@@ -190,32 +189,47 @@ services:
       timeout: 20s
       retries: 3
 
-  # Milvus Standalone
   milvus-standalone:
     image: milvusdb/milvus:v2.4.5
     container_name: milvus-standalone
     restart: unless-stopped
-    command: milvus run standalone
     security_opt:
       - seccomp:unconfined
     environment:
       ETCD_ENDPOINTS: milvus-etcd:2379
       MINIO_ADDRESS: milvus-minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
-      MINIO_USE_SSL: false
-      MINIO_BUCKET_NAME: milvus-bucket
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
     volumes:
       - milvus_data:/var/lib/milvus
     ports:
       - "${MILVUS_PORT:-19530}:19530"
       - "${MILVUS_GRPC_PORT:-9091}:9091"
     depends_on:
-      milvus-etcd:
-        condition: service_healthy
-      milvus-minio:
-        condition: service_healthy
+      - milvus-etcd
+      - milvus-minio
     networks:
+      - ai-network
+
+  # Text Embeddings Inference (TEI)
+  tei:
+    image: ghcr.io/huggingface/text-embeddings-inference:1.5
+    container_name: tei
+    restart: unless-stopped
+    ports:
+      - "${TEI_PORT:-8090}:80"
+    volumes:
+      - tei_data:/data
+    environment:
+      - MODEL_ID=${TEI_MODEL_ID:-BAAI/bge-base-en-v1.5}
+      - POOLING=mean
+      - MAX_BATCH_TOKENS=16384
+    command: --model-id BAAI/bge-base-en-v1.5
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
       - ai-network
 
 volumes:
@@ -227,6 +241,7 @@ volumes:
   etcd_data:
   minio_data:
   milvus_data:
+  tei_data:
 
 networks:
   ai-network:
