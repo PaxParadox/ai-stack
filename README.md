@@ -4,21 +4,20 @@ A comprehensive, locally-hosted AI infrastructure with multi-GPU support, RAG ca
 
 ## 🚀 Features
 
-- **Multi-GPU Support**: RTX 3090 (24GB) for LLMs, GTX 1050 Ti (4GB) for embeddings
-- **Complete AI Pipeline**: LLMs, embeddings, vector search, and RAG
+- **Multi-GPU Support**: RTX 3090 (24GB) + GTX 1050 Ti (4GB)
+- **Complete AI Pipeline**: LLMs, embeddings (via Ollama), vector search, and RAG
 - **Web Interfaces**: Open WebUI for chat, n8n for automation, MinIO console
 - **Privacy-First**: SearXNG search, all data locally hosted
 - **Tailscale Ready**: Secure remote access configured
 
-## 📦 Services
+## 📦 Active Services
 
 | Service | Port | Purpose | GPU | URL |
 |---------|------|---------|-----|-----|
 | Open WebUI | 3000 | AI Chat Interface | - | http://ai-stack:3000 |
-| Ollama | 11434 | LLM Inference | RTX 3090 | http://ai-stack:11434 |
+| Ollama | 11434 | LLM Inference & Embeddings | RTX 3090 | http://ai-stack:11434 |
 | n8n | 5678 | Workflow Automation | - | http://ai-stack:5678 |
 | SearXNG | 8888 | Private Search | - | http://ai-stack:8888 |
-| TEI | 8090 | Text Embeddings | GTX 1050 Ti | http://ai-stack:8090 |
 | Milvus | 19530 | Vector Database | - | http://ai-stack:19530 |
 | MinIO | 9001 | Object Storage UI | - | http://ai-stack:9001 |
 | PostgreSQL | 5432 | Database | - | Internal |
@@ -35,7 +34,7 @@ cd ai-stack
 docker compose up -d
 
 # Check status
-docker compose ps
+./check_services.sh
 
 # View logs
 docker compose logs -f [service-name]
@@ -47,32 +46,43 @@ docker compose logs -f [service-name]
 1. Access Open WebUI at http://ai-stack:3000
 2. Create an account (if first time)
 3. Select a model and start chatting
+4. Web search is integrated - just ask questions!
 
-### Pull AI Models
+### Available AI Models
 ```bash
-# Pull models to Ollama
-docker exec ollama ollama pull llama3.2:3b
+# Currently installed
+docker exec ollama ollama list
+
+# Pull additional models
+docker exec ollama ollama pull llama3.2:7b
 docker exec ollama ollama pull mixtral:8x7b
 docker exec ollama ollama pull codellama:13b
 ```
 
+### Embeddings
+Using Ollama's `nomic-embed-text` model for embeddings (already installed)
+
 ### n8n Workflows
 1. Access n8n at http://ai-stack:5678
-2. Import workflows from `n8n/workflows/`
-3. Available workflows:
-   - AI RAG Pipeline
-   - AI Search Assistant
+2. Import workflows from `n8n/workflows/`:
+   - `ollama-chat-workflow.json` - Chat API endpoint
+   - `searxng-ai-search.json` - AI-powered web search
+   
+Run the import helper:
+```bash
+./import_workflow.sh
+```
 
 ### Search Configuration
 SearXNG is configured for JSON output and integrated with Open WebUI.
 Access directly at http://ai-stack:8888 for standalone search.
 
-## 🔐 Security
+## 🔐 Security & Access
 
-- All services run in isolated Docker containers
+- All services accessible via Tailscale at `100.119.32.64` or `ai-stack`
 - PostgreSQL and Redis are not exposed externally
-- Tailscale provides secure remote access
 - Default credentials in `.env` file (change in production!)
+- N8N_SECURE_COOKIE disabled for HTTP access via Tailscale
 
 ## 🛠 Configuration
 
@@ -80,12 +90,12 @@ Edit `.env` file to customize:
 - Database passwords
 - Service ports
 - Model selections
-- Authentication settings
+- MinIO credentials (default: minioadmin/minioadmin123)
 
 ## 📊 Resource Usage
 
-- **RTX 3090 (24GB)**: Primary LLM inference
-- **GTX 1050 Ti (4GB)**: Embeddings generation
+- **RTX 3090 (24GB)**: Primary LLM inference and embeddings
+- **GTX 1050 Ti (4GB)**: Available for future use
 - **RAM**: Recommended 32GB+
 - **Storage**: 100GB+ for models and data
 
@@ -96,8 +106,8 @@ Edit `.env` file to customize:
 docker compose pull
 docker compose up -d
 
-# Backup data
-./scripts/backup.sh
+# Check service health
+./check_services.sh
 
 # Clean up
 docker compose down
@@ -107,7 +117,8 @@ docker system prune -a
 ## 📚 API Endpoints
 
 - **Ollama API**: `http://ai-stack:11434/api/generate`
-- **TEI Embeddings**: `http://ai-stack:8090/embed`
+- **Ollama Chat**: `http://ai-stack:11434/api/chat`
+- **Ollama Embeddings**: `http://ai-stack:11434/api/embeddings`
 - **Milvus API**: `http://ai-stack:19530`
 - **n8n Webhooks**: `http://ai-stack:5678/webhook/*`
 
@@ -121,15 +132,35 @@ MIT License - See LICENSE file
 
 ## 🆘 Troubleshooting
 
-If services fail to start:
-1. Check GPU drivers: `nvidia-smi`
-2. Verify Docker GPU support: `docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi`
-3. Check logs: `docker compose logs [service-name]`
-4. Ensure sufficient resources (RAM, disk space)
+### Service Issues
+```bash
+# Check status
+docker ps
+./check_services.sh
 
-## 🔗 Links
+# View logs
+docker logs [container-name]
+
+# Restart service
+docker compose restart [service-name]
+```
+
+### GPU Issues
+```bash
+# Check GPU status
+nvidia-smi
+
+# Verify in container
+docker exec ollama nvidia-smi
+```
+
+### n8n Secure Cookie Warning
+Already fixed - N8N_SECURE_COOKIE=false is set
+
+## 🔗 Documentation
 
 - [Open WebUI Documentation](https://docs.openwebui.com)
-- [Ollama Models](https://ollama.ai/library)
+- [Ollama Documentation](https://github.com/ollama/ollama)
 - [n8n Documentation](https://docs.n8n.io)
 - [Milvus Documentation](https://milvus.io/docs)
+- [SearXNG Documentation](https://docs.searxng.org)

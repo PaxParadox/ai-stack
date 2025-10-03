@@ -1,0 +1,148 @@
+{
+  "name": "AI Web Search Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "search",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://searxng:8080/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.body.query }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "search",
+      "name": "Search Web",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and format search results\nconst results = $input.first().json.results || [];\nconst topResults = results.slice(0, 5);\n\nconst formattedResults = topResults.map(r => ({\n  title: r.title,\n  url: r.url,\n  content: r.content\n}));\n\nreturn {\n  query: $('Webhook').first().json.body.query,\n  results: formattedResults,\n  resultCount: results.length\n};"
+      },
+      "id": "format",
+      "name": "Format Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama3.2:3b\",\n  \"prompt\": \"Based on these search results:\\n\\n{{ JSON.stringify($json.results, null, 2) }}\\n\\nAnswer this question: {{ $json.query }}\\n\\nProvide a concise and informative answer based on the search results.\",\n  \"stream\": false\n}",
+        "options": {}
+      },
+      "id": "ai",
+      "name": "Generate AI Answer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine search results with AI response\nreturn {\n  query: $('Format Results').first().json.query,\n  aiResponse: $input.first().json.response,\n  sources: $('Format Results').first().json.results.map(r => ({\n    title: r.title,\n    url: r.url\n  })),\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "combine",
+      "name": "Combine Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Search Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Web": {
+      "main": [
+        [
+          {
+            "node": "Format Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Results": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Answer": {
+      "main": [
+        [
+          {
+            "node": "Combine Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

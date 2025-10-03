@@ -14,6 +14,7 @@ fi
 # Check Ollama
 if curl -s http://localhost:11434/api/version > /dev/null; then
     echo "✅ Ollama API: http://100.119.32.64:11434"
+    echo "   └─ Embeddings: via nomic-embed-text model"
 else
     echo "❌ Ollama API"
 fi
@@ -39,6 +40,13 @@ else
     echo "❌ MinIO Console"
 fi
 
+# Check Milvus
+if curl -s http://localhost:9091/healthz 2>/dev/null | grep -q "OK\|healthy"; then
+    echo "✅ Milvus Vector DB: http://100.119.32.64:19530"
+else
+    echo "⚠️  Milvus Vector DB: Running but not fully healthy yet"
+fi
+
 echo
 echo "Available Models:"
 echo "----------------"
@@ -48,3 +56,8 @@ echo
 echo "Container Status:"
 echo "----------------"
 docker ps --format "table {{.Names}}\t{{.Status}}" | column -t
+
+echo
+echo "GPU Usage:"
+echo "----------"
+nvidia-smi --query-gpu=index,name,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits | column -t -s ','

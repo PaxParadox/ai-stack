@@ -17,8 +17,14 @@ All services are accessible via Tailscale at IP: **100.119.32.64** or hostname: 
 
 | Service | Endpoint | Example |
 |---------|----------|---------|
-| **Ollama** | http://100.119.32.64:11434 | `/api/generate`, `/api/chat` |
+| **Ollama** | http://100.119.32.64:11434 | `/api/generate`, `/api/chat`, `/api/embeddings` |
 | **Milvus** | http://100.119.32.64:19530 | Vector database operations |
+| **n8n Webhooks** | http://100.119.32.64:5678/webhook/* | Custom automation endpoints |
+
+## Currently Installed Models
+
+- **llama3.2:3b** - Fast conversational AI (2.0 GB)
+- **nomic-embed-text** - Text embeddings for RAG (274 MB)
 
 ## First Time Setup
 
@@ -26,15 +32,19 @@ All services are accessible via Tailscale at IP: **100.119.32.64** or hostname: 
 1. Navigate to http://100.119.32.64:3000
 2. Click "Sign Up" to create your admin account
 3. Once logged in, models from Ollama will be automatically available
-4. Test search by typing a query and selecting "Search Web"
+4. Test search by typing a query and using the search feature
 
 ### 2. n8n
 1. Navigate to http://100.119.32.64:5678
 2. Create your owner account
-3. Import example workflows from `/root/ai-stack/n8n/workflows/`
+3. Import workflows using the helper script:
+   ```bash
+   cd /root/ai-stack
+   ./import_workflow.sh
+   ```
 4. Available workflows:
-   - `ai-rag-pipeline.json` - RAG pipeline with embeddings
-   - `ai-search-assistant.json` - Web search with AI responses
+   - `ollama-chat-workflow.json` - Chat API endpoint
+   - `searxng-ai-search.json` - AI-powered web search
 
 ### 3. Pull Additional Models
 ```bash
@@ -42,6 +52,9 @@ All services are accessible via Tailscale at IP: **100.119.32.64** or hostname: 
 docker exec ollama ollama pull mistral
 docker exec ollama ollama pull codellama:13b
 docker exec ollama ollama pull llama3.2:7b
+
+# For better embeddings (optional)
+docker exec ollama ollama pull mxbai-embed-large
 ```
 
 ## Testing Services
@@ -52,6 +65,16 @@ cd /root/ai-stack
 ./check_services.sh
 ```
 
+## Using Embeddings
+
+Ollama provides embeddings via the `nomic-embed-text` model:
+
+```bash
+# Example: Generate embeddings
+curl http://100.119.32.64:11434/api/embeddings \
+  -d '{"model": "nomic-embed-text", "prompt": "Hello world"}'
+```
+
 ## Troubleshooting
 
 ### Service not accessible?
@@ -59,12 +82,14 @@ cd /root/ai-stack
 2. Check logs: `docker logs <container-name>`
 3. Restart service: `docker compose restart <service-name>`
 
-### n8n shows secure cookie warning?
-Already fixed - N8N_SECURE_COOKIE is set to false
-
 ### Ollama not using GPU?
-Check GPU status: `nvidia-smi`
-Verify in container: `docker exec ollama nvidia-smi`
+```bash
+# Check GPU status
+nvidia-smi
+
+# Verify in container
+docker exec ollama nvidia-smi
+```
 
 ### Need to reset a service?
 ```bash
@@ -106,4 +131,23 @@ Check disk usage:
 ```bash
 df -h
 docker system df
+```
+
+## Quick Commands
+
+```bash
+# View all running services
+docker ps
+
+# Check logs for a service
+docker logs -f <service-name>
+
+# Restart all services
+docker compose restart
+
+# Stop all services
+docker compose stop
+
+# Start all services
+docker compose start
 ```
