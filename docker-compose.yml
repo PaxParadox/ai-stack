@@ -105,6 +105,12 @@ services:
       - RAG_EMBEDDING_ENGINE=ollama
       - RAG_EMBEDDING_MODEL=nomic-embed-text
       - VECTOR_DB=chroma
+      # Image Generation Integration
+      - ENABLE_IMAGE_GENERATION=true
+      - IMAGE_GENERATION_ENGINE=automatic1111
+      - AUTOMATIC1111_BASE_URL=http://sd-webui:17860
+      - IMAGE_SIZE=512x512
+      - IMAGE_STEPS=30
     depends_on:
       - postgres
       - redis
