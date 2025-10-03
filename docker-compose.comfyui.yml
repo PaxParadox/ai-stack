@@ -44,8 +44,9 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=1  # GTX 1050 Ti
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - COMMANDLINE_ARGS=--listen --xformers --no-half-vae --api
+      - COMMANDLINE_ARGS=--listen --xformers --medvram --no-half-vae --api --opt-sdp-attention
       - WEBUI_LAUNCH_LIVE_OUTPUT=true
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
     deploy:
       resources:
         reservations:
