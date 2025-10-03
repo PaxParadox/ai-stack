@@ -7,6 +7,7 @@ echo "--------------------"
 # Check Open WebUI
 if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 | grep -q "200\|302"; then
     echo "✅ Open WebUI: http://100.119.32.64:3000"
+    echo "   └─ Built-in RAG with ChromaDB"
 else
     echo "❌ Open WebUI"
 fi
@@ -33,20 +34,6 @@ else
     echo "❌ SearXNG"
 fi
 
-# Check MinIO Console
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:9001 | grep -q "200\|403"; then
-    echo "✅ MinIO Console: http://100.119.32.64:9001"
-else
-    echo "❌ MinIO Console"
-fi
-
-# Check Milvus
-if curl -s http://localhost:9091/healthz 2>/dev/null | grep -q "OK\|healthy"; then
-    echo "✅ Milvus Vector DB: http://100.119.32.64:19530"
-else
-    echo "⚠️  Milvus Vector DB: Running but not fully healthy yet"
-fi
-
 echo
 echo "Available Models:"
 echo "----------------"
@@ -61,3 +48,7 @@ echo
 echo "GPU Usage:"
 echo "----------"
 nvidia-smi --query-gpu=index,name,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits | column -t -s ','
+
+echo
+echo "💡 Tip: For vector database needs, use Open WebUI's built-in RAG"
+echo "   or see MILVUS_FUTURE_USE.md to add Milvus later"

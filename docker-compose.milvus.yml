@@ -1,0 +1,107 @@
+# Milvus Vector Database Stack - For Future Use
+# 
+# To add Milvus back to your stack:
+# 1. Copy these services to your main docker-compose.yml
+# 2. Run: docker compose up -d milvus-etcd milvus-minio milvus-standalone
+# 3. Wait for initialization (can take 2-3 minutes)
+# 4. Access via API at port 19530
+#
+# Optional: Add Attu GUI for web interface (see bottom)
+
+version: '3.8'
+
+services:
+  # Milvus dependencies
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.12
+    container_name: milvus-etcd
+    restart: unless-stopped
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - etcd_data:/etcd
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  milvus-minio:
+    image: minio/minio:latest
+    container_name: milvus-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "${MINIO_PORT:-9001}:9001"
+      - "${MINIO_CONSOLE_PORT:-9000}:9000"
+    volumes:
+      - minio_data:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Milvus Standalone
+  milvus-standalone:
+    image: milvusdb/milvus:v2.4.5
+    container_name: milvus-standalone
+    restart: unless-stopped
+    command: milvus run standalone
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: milvus-etcd:2379
+      MINIO_ADDRESS: milvus-minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_USE_SSL: false
+      MINIO_BUCKET_NAME: milvus-bucket
+    volumes:
+      - milvus_data:/var/lib/milvus
+    ports:
+      - "${MILVUS_PORT:-19530}:19530"
+      - "${MILVUS_GRPC_PORT:-9091}:9091"
+    depends_on:
+      milvus-etcd:
+        condition: service_healthy
+      milvus-minio:
+        condition: service_healthy
+    networks:
+      - ai-network
+
+  # Optional: Attu - Web GUI for Milvus
+  # Uncomment to add web interface for Milvus
+  # attu:
+  #   image: zilliz/attu:v2.4
+  #   container_name: attu
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8000:3000"
+  #   environment:
+  #     - MILVUS_URL=milvus-standalone:19530
+  #   depends_on:
+  #     - milvus-standalone
+  #   networks:
+  #     - ai-network
+
+volumes:
+  etcd_data:
+  minio_data:
+  milvus_data:
+
+networks:
+  ai-network:
+    external: true
+    name: ai-stack_ai-network
