@@ -12,7 +12,7 @@ services:
     container_name: comfyui
     restart: unless-stopped
     ports:
-      - "${COMFYUI_PORT:-7860}:7860"
+      - "${COMFYUI_PORT:-7860}:18188"  # Direct access to ComfyUI (bypass auth portal)
     volumes:
       - comfyui_data:/workspace
       - ./comfyui/models:/workspace/models  # Share models
@@ -21,6 +21,9 @@ services:
       - NVIDIA_VISIBLE_DEVICES=0  # RTX 3090 - Plenty of VRAM!
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - COMFYUI_FLAGS=--listen 0.0.0.0
+      - WEB_ENABLE_AUTH=false  # Disable authentication portal
+      - DIRECT_ADDRESS=100.119.32.64:7860  # Set proper access URL
+      - DIRECT_ADDRESS_GET_WAN=false
     deploy:
       resources:
         reservations:
@@ -37,7 +40,7 @@ services:
     container_name: sd-webui
     restart: unless-stopped
     ports:
-      - "${SD_WEBUI_PORT:-7861}:7860"
+      - "${SD_WEBUI_PORT:-7861}:17860"  # Direct access to WebUI (bypass auth portal)
     volumes:
       - sd_webui_data:/workspace
       - ./comfyui/models:/workspace/models  # Share models with ComfyUI
@@ -46,6 +49,9 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - COMMANDLINE_ARGS=--listen --xformers --api
       - WEBUI_LAUNCH_LIVE_OUTPUT=true
+      - WEB_ENABLE_AUTH=false  # Disable authentication portal
+      - DIRECT_ADDRESS=100.119.32.64:7861  # Set proper access URL
+      - DIRECT_ADDRESS_GET_WAN=false
     deploy:
       resources:
         reservations:
