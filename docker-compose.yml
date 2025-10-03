@@ -55,9 +55,6 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['0']  # RTX 3090
-              capabilities: [gpu]
-    networks:
       - ai-network
 
   # SearXNG - Privacy-focused search engine
@@ -233,9 +230,6 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['1']  # GTX 1050 Ti for embeddings
-              capabilities: [gpu]
-    networks:
       - ai-network
 
 volumes:
